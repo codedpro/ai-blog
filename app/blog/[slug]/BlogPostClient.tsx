@@ -1,4 +1,10 @@
-import BlogPostClient from "./BlogPostClient"
+"use client"
+
+import Link from "next/link"
+import Image from "next/image"
+import { ArrowLeft, BrainCircuit, Clock, Share2, Twitter, Facebook, Linkedin } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { useEffect } from "react"
 
 // This is a static mapping of blog posts for GitHub Pages
 const blogPosts = {
@@ -150,7 +156,7 @@ const blogPosts = {
       {
         title: "Deep Learning for Natural Language Processing",
         category: "NLP",
-        image: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=600&h=400&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=600&h=400&auto=format&fit=crop",
         slug: "deep-learning-nlp",
       },
     ],
@@ -261,6 +267,7 @@ const blogPosts = {
     date: "February 28, 2025",
     author: "Dr. Thomas Anderson",
     category: "Future of AI",
+    readTime: "10 min read",
     image: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=80&w=2000&h=1000&auto=format&fit=crop",
     content: `
       <p>Artificial intelligence has advanced at a breathtaking pace in recent years, with breakthroughs in areas like large language models, diffusion-based image generation, and multimodal systems transforming what we thought possible. As we look to the future of AI research, several promising directions are emerging.</p>
@@ -405,35 +412,218 @@ const blogPosts = {
   },
 }
 
-// Generate static paths for all blog posts
-export function generateStaticParams() {
-  return Object.keys(blogPosts).map((slug) => ({
-    slug,
-  }))
-}
-
-// Generate metadata for each blog post
-export function generateMetadata({ params }: { params: { slug: string } }) {
+export default function BlogPostClient({ params }: { params: { slug: string } }) {
   const post = blogPosts[params.slug]
 
-  if (!post) {
-    return {
-      title: "Post Not Found - NeuralPulse",
-      description: "The requested blog post could not be found.",
+  useEffect(() => {
+    // Ensure the code runs only in the client-side
+    if (typeof window !== "undefined") {
+      // Function to handle button click and scroll to the newsletter section
+      const handleSubscribeClick = () => {
+        const newsletterSection = document.getElementById("newsletter")
+        if (newsletterSection) {
+          newsletterSection.scrollIntoView({ behavior: "smooth" })
+        }
+      }
+
+      // Attach the event listener to the button
+      const subscribeButton = document.getElementById("subscribeButton")
+      if (subscribeButton) {
+        subscribeButton.addEventListener("click", handleSubscribeClick)
+      }
+
+      // Cleanup the event listener when the component unmounts
+      return () => {
+        if (subscribeButton) {
+          subscribeButton.removeEventListener("click", handleSubscribeClick)
+        }
+      }
     }
+  }, [])
+
+  if (!post) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-4">Post Not Found</h1>
+          <p className="mb-6">The blog post you're looking for doesn't exist or has been moved.</p>
+          <Button asChild>
+            <Link href="/">Return Home</Link>
+          </Button>
+        </div>
+      </div>
+    )
   }
 
-  return {
-    title: `${post.title} - NeuralPulse`,
-    description: post.content.substring(0, 160).replace(/<[^>]*>/g, "") + "...",
-    openGraph: {
-      title: post.title,
-      description: post.content.substring(0, 160).replace(/<[^>]*>/g, "") + "...",
-      images: [post.image],
-    },
-  }
-}
+  return (
+    <div className="min-h-screen bg-black text-white">
+      <header className="container mx-auto py-6">
+        <div className="flex items-center justify-between">
+          <Link href="/" className="text-xl font-bold tracking-tighter">
+            Neural<span className="text-purple-500">Pulse</span>
+          </Link>
+          <Button
+            id="subscribeButton"
+            variant="outline"
+            className="border-purple-500 text-purple-500 hover:bg-purple-950 hover:text-white"
+          >
+            Subscribe
+          </Button>
+        </div>
+      </header>
 
-export default function BlogPost({ params }: { params: { slug: string } }) {
-  return <BlogPostClient params={params} />
+      <main className="container mx-auto px-4 py-12">
+        <div className="max-w-3xl mx-auto">
+          <Link href="/articles/" className="inline-flex items-center text-gray-400 hover:text-white mb-8">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to articles
+          </Link>
+
+          <div className="flex items-center gap-2 text-sm text-purple-500 mb-4">
+            <BrainCircuit className="h-5 w-5" />
+            <span>{post.category}</span>
+          </div>
+
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-6">{post.title}</h1>
+
+          <div className="flex items-center gap-4 text-sm text-gray-400 mb-8">
+            <div className="flex items-center gap-1">
+              <Clock className="h-4 w-4" />
+              <span>{post.readTime}</span>
+            </div>
+            <div>{post.date}</div>
+            <div>By {post.author}</div>
+          </div>
+
+          <div className="relative h-[400px] md:h-[500px] rounded-xl overflow-hidden border border-gray-800 mb-8">
+            <Image
+              src={post.image || "/placeholder.svg"}
+              alt="Article hero image showing GAN-generated art"
+              fill
+              className="object-cover"
+              priority
+            />
+          </div>
+
+          <div className="flex justify-between items-center mb-8">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-3 border-gray-800 hover:bg-gray-900"
+                onClick={() => {
+                  const url = window.location.href
+                  const text = `Check out this article: ${post.title}`
+                  window.open(
+                    `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`,
+                    "_blank",
+                  )
+                }}
+              >
+                <Twitter className="h-4 w-4 mr-1" />
+                Share
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-3 border-gray-800 hover:bg-gray-900"
+                onClick={() => {
+                  const url = window.location.href
+                  window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, "_blank")
+                }}
+              >
+                <Facebook className="h-4 w-4 mr-1" />
+                Share
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-3 border-gray-800 hover:bg-gray-900"
+                onClick={() => {
+                  const url = window.location.href
+                  window.open(
+                    `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
+                    "_blank",
+                  )
+                }}
+              >
+                <Linkedin className="h-4 w-4 mr-1" />
+                Share
+              </Button>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-3 border-gray-800 hover:bg-gray-900"
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href)
+                alert("Link copied to clipboard!")
+              }}
+            >
+              <Share2 className="h-4 w-4 mr-1" />
+              Share
+            </Button>
+          </div>
+
+          <article className="prose prose-invert prose-purple max-w-none">
+            <div dangerouslySetInnerHTML={{ __html: post.content }} />
+          </article>
+
+          <div className="border-t border-gray-800 mt-12 pt-8">
+            <h3 className="text-xl font-bold mb-6">Related Articles</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              {post.relatedPosts.map((relatedPost, index) => (
+                <Link href={`/blog/${relatedPost.slug}/`} className="group" key={index}>
+                  <div className="space-y-3">
+                    <div className="relative h-48 rounded-lg overflow-hidden border border-gray-800 group-hover:border-purple-500/50 transition-colors">
+                      <Image
+                        src={relatedPost.image || "/placeholder.svg"}
+                        alt={`${relatedPost.title} thumbnail`}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 text-xs text-purple-500 mb-2">
+                        <BrainCircuit className="h-4 w-4" />
+                        <span>{relatedPost.category}</span>
+                      </div>
+                      <h3 className="font-medium group-hover:text-purple-400 transition-colors">{relatedPost.title}</h3>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer className="border-t border-gray-800 py-12">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center">
+            <Link href="/" className="text-xl font-bold tracking-tighter">
+              Neural<span className="text-purple-500">Pulse</span>
+            </Link>
+            <p className="text-gray-400 text-sm mt-4 mb-6">
+              Exploring the cutting edge of artificial intelligence and machine learning.
+            </p>
+            <div className="flex justify-center space-x-4">
+              <Link href="#" className="text-gray-400 hover:text-white">
+                <Twitter className="h-5 w-5" />
+              </Link>
+              <Link href="#" className="text-gray-400 hover:text-white">
+                <Facebook className="h-5 w-5" />
+              </Link>
+              <Link href="#" className="text-gray-400 hover:text-white">
+                <Linkedin className="h-5 w-5" />
+              </Link>
+            </div>
+            <div className="border-t border-gray-800 mt-8 pt-6 text-sm text-gray-400">
+              <p>© {new Date().getFullYear()} NeuralPulse. All rights reserved.</p>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  )
 }
